@@ -1,12 +1,6 @@
-# GitLab reusable workflow for autoSDLC analysis stage
-# Usage: include this in your .gitlab-ci.yml:
-#   include:
-#     - project: 'autosdlc/templates'
-#       ref: main
-#       file: '/.gitlab/autosdlc-analyze.yml'
 
-.autosdlc_analyze:
-  stage: analyze
+.autosdlc:
+  stage: manage
   image: docker:24-cli
   services:
     - docker:24-dind
@@ -21,13 +15,13 @@
   script:
     - |
       docker run --rm \
-        ghcr.io/autosdlc/cli:latest analyze \
+       autosdlc/cli:latest analyze \
         --token "$GITLAB_OIDC_TOKEN" \
         --pipeline-id "$CI_PIPELINE_ID"
   rules:
     - if: '$CI_COMMIT_BRANCH == "plan" || $CI_COMMIT_BRANCH == "spec" || $CI_COMMIT_BRANCH == "task" || $CI_COMMIT_BRANCH == "develop"'
 
-autosdlc:analyze:
-  extends: .autosdlc_analyze
+autosdlc:manage:
+  extends: .autosdlc
   tags:
     - docker
