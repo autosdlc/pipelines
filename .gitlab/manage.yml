@@ -1,5 +1,7 @@
+stages:
+  - manage
 
-.autosdlc:
+manage:
   stage: manage
   image: docker:24-cli
   services:
@@ -18,10 +20,3 @@
        autosdlc/cli:latest analyze \
         --token "$GITLAB_OIDC_TOKEN" \
         --pipeline-id "$CI_PIPELINE_ID"
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "plan" || $CI_COMMIT_BRANCH == "spec" || $CI_COMMIT_BRANCH == "task" || $CI_COMMIT_BRANCH == "develop"'
-
-autosdlc:manage:
-  extends: .autosdlc
-  tags:
-    - docker
