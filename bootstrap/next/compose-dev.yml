@@ -1,0 +1,26 @@
+services:
+  {{APP_SERVICE}}:
+    build:
+      context: ./frontend
+      dockerfile: ../Dockerfile
+    image: {{APP_NAME}}:latest
+    container_name: {{APP_NAME}}-dev
+    restart: unless-stopped
+    ports:
+      - "{{APP_PORT}}:80"
+    environment:
+      - NODE_ENV=production
+      - APP_NAME={{APP_NAME}}
+      - APP_DOMAIN={{APP_DOMAIN}}
+      - PORT=80
+      - HOSTNAME=0.0.0.0
+    networks:
+      - {{APP_STACK}}-network
+    labels:
+      - "app.name={{APP_NAME}}"
+      - "app.environment=development"
+      - "app.type={{APP_TYPE}}"
+
+networks:
+  {{APP_STACK}}-network:
+    name: {{APP_STACK}}-network

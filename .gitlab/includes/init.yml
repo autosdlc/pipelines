@@ -1,0 +1,29 @@
+# GitLab CI/CD include file for autoSDLC initialization
+# This is meant to be included in your .gitlab-ci.yml
+
+.autosdlc_init:
+  stage: init
+  image: docker:24-cli
+  services:
+    - docker:24-dind
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: https://autosdlc.io
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  script:
+    - |
+      docker run --rm \
+        ghcr.io/autosdlc/cli:latest init \
+        --token "$GITLAB_OIDC_TOKEN" \
+        --pipeline-id "$CI_PIPELINE_ID"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"'
+      when: manual
+  artifacts:
+    paths:
+      - .ai/project.json
+    expire_in: 1 week

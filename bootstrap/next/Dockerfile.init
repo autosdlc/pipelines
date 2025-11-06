@@ -1,0 +1,100 @@
+# Dockerfile.init - Generates a new Next.js application with best practices
+# This runs once during init branch to scaffold the application
+
+FROM node:24-alpine AS generator
+
+# Accept build arg for app name
+ARG APP_NAME=app
+
+# Install dependencies for app generation
+RUN apk add --no-cache git jq
+
+WORKDIR /app
+
+# Generate Next.js app with TypeScript, Tailwind, App Router, and best practices
+# We use --yes to skip prompts and configure everything via flags
+RUN npx create-next-app@latest . \
+    --typescript \
+    --tailwind \
+    --app \
+    --no-src-dir \
+    --import-alias "@/*" \
+    --eslint \
+    --yes
+
+# Update package.json with correct app name
+RUN jq --arg name "$APP_NAME" '.name = $name' package.json > package.json.tmp && \
+    mv package.json.tmp package.json
+
+# Install additional SEO and common dependencies
+RUN npm install \
+    next-seo \
+    @types/node \
+    @types/react \
+    @types/react-dom \
+    sharp && \
+    npm install -D @tailwindcss/postcss
+
+# Create healthz endpoint
+RUN mkdir -p app/api/healthz && \
+    printf '%s\n' \
+    "import { NextResponse } from 'next/server';" \
+    "" \
+    "export async function GET() {" \
+    "  return NextResponse.json({" \
+    "    status: 'healthy'," \
+    "    timestamp: new Date().toISOString()," \
+    "    service: process.env.APP_NAME || 'unknown'," \
+    "  });" \
+    "}" \
+    > app/api/healthz/route.ts
+
+# Create custom app/page.tsx with COMING SOON message
+RUN printf '%s\n' \
+    "export default function Home() {" \
+    "  return (" \
+    "    <main className=\"flex min-h-screen flex-col items-center justify-center bg-[#0a0a0a]\">" \
+    "      <h1 className=\"text-4xl font-light tracking-wider text-white\">" \
+    "        COMING SOON" \
+    "      </h1>" \
+    "    </main>" \
+    "  );" \
+    "}" \
+    > app/page.tsx
+
+# Update next.config.js for production optimization
+RUN echo '/** @type {import("next").NextConfig} */' > next.config.js && \
+    echo 'const nextConfig = {' >> next.config.js && \
+    echo '  output: "standalone",' >> next.config.js && \
+    echo '  poweredByHeader: false,' >> next.config.js && \
+    echo '  compress: true,' >> next.config.js && \
+    echo '  images: {' >> next.config.js && \
+    echo '    formats: ["image/avif", "image/webp"],' >> next.config.js && \
+    echo '    remotePatterns: [],' >> next.config.js && \
+    echo '  },' >> next.config.js && \
+    echo '  async headers() {' >> next.config.js && \
+    echo '    return [' >> next.config.js && \
+    echo '      {' >> next.config.js && \
+    echo '        source: "/:path*",' >> next.config.js && \
+    echo '        headers: [' >> next.config.js && \
+    echo '          { key: "X-DNS-Prefetch-Control", value: "on" },' >> next.config.js && \
+    echo '          { key: "X-Frame-Options", value: "SAMEORIGIN" },' >> next.config.js && \
+    echo '          { key: "X-Content-Type-Options", value: "nosniff" },' >> next.config.js && \
+    echo '          { key: "Referrer-Policy", value: "origin-when-cross-origin" }' >> next.config.js && \
+    echo '        ]' >> next.config.js && \
+    echo '      }' >> next.config.js && \
+    echo '    ]' >> next.config.js && \
+    echo '  }' >> next.config.js && \
+    echo '}' >> next.config.js && \
+    echo '' >> next.config.js && \
+    echo 'module.exports = nextConfig' >> next.config.js
+
+# Update package.json to use the correct port from env
+RUN npm pkg set scripts.dev="next dev -p \${APP_PORT:-3000}"
+
+# The generated app will be in /app
+# It will be copied out during the CI pipeline
+WORKDIR /app
+
+# Default command (not used in CI, but helpful for local testing)
+CMD ["sh", "-c", "echo 'Generated app is ready in /app'"]

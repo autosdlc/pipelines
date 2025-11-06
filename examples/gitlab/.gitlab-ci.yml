@@ -1,0 +1,32 @@
+# Example .gitlab-ci.yml for a project using autoSDLC
+# Place this file in your repository root
+
+stages:
+  - init
+  - analyze
+  - build
+  - test
+  - deploy
+
+# Include autoSDLC templates from the central templates repo
+include:
+  - project: 'autosdlc/templates'
+    ref: main
+    file: 
+      - '/.gitlab/autosdlc-init.yml'
+      - '/.gitlab/autosdlc-analyze.yml'
+
+# Your normal CI/CD jobs below
+build:
+  stage: build
+  script:
+    - echo "Building application..."
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "plan" && $CI_COMMIT_BRANCH != "spec" && $CI_COMMIT_BRANCH != "task"'
+
+test:
+  stage: test
+  script:
+    - echo "Running tests..."
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "plan" && $CI_COMMIT_BRANCH != "spec" && $CI_COMMIT_BRANCH != "task"'

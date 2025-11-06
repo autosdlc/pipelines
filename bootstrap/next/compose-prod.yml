@@ -1,0 +1,32 @@
+services:
+  {{APP_SERVICE}}:
+    image: {{APP_NAME}}:latest
+    container_name: {{APP_NAME}}-prod
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - APP_NAME={{APP_NAME}}
+      - APP_DOMAIN={{APP_DOMAIN}}
+      - PORT=80
+      - HOSTNAME=0.0.0.0
+    networks:
+      - {{APP_STACK}}-network
+      - traefik-public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.routers.{{APP_NAME}}.rule=Host(`{{APP_DOMAIN}}`)"
+      - "traefik.http.routers.{{APP_NAME}}.entrypoints=websecure"
+      - "traefik.http.routers.{{APP_NAME}}.tls=true"
+      - "traefik.http.routers.{{APP_NAME}}.tls.certresolver=letsencrypt"
+      - "traefik.http.services.{{APP_NAME}}.loadbalancer.server.port=80"
+      - "app.name={{APP_NAME}}"
+      - "app.environment=production"
+      - "app.type={{APP_TYPE}}"
+
+networks:
+  {{APP_STACK}}-network:
+    name: {{APP_STACK}}-network
+    external: true
+  traefik-public:
+    external: true

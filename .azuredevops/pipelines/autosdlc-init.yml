@@ -1,0 +1,51 @@
+# Azure DevOps reusable template for autoSDLC initialization
+# Usage: reference this template in your pipeline:
+#   resources:
+#     repositories:
+#       - repository: templates
+#         type: git
+#         name: autosdlc/templates
+#   stages:
+#     - template: .azuredevops/pipelines/autosdlc-init.yml@templates
+
+stages:
+  - stage: Initialize
+    displayName: 'autoSDLC Initialize'
+    condition: |
+      or(
+        eq(variables['Build.SourceBranchName'], 'main'),
+        eq(variables['Build.SourceBranchName'], 'master')
+      )
+    
+    jobs:
+      - job: AutoSDLC_Init
+        displayName: 'Run autoSDLC Initialization'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          - checkout: self
+            persistCredentials: true
+
+          - script: |
+              # Get Azure DevOps OIDC token (System.AccessToken)
+              echo "##vso[task.setvariable variable=OIDC_TOKEN;issecret=true]$(System.AccessToken)"
+            displayName: 'Get OIDC Token'
+
+          - script: |
+              docker run --rm \
+                -v $(Build.SourcesDirectory):/workspace \
+                -w /workspace \
+                ghcr.io/autosdlc/cli:latest init \
+                --token "$(OIDC_TOKEN)" \
+                --pipeline-id "$(Build.BuildId)"
+            displayName: 'Run autoSDLC Initialization'
+            env:
+              DOCKER_BUILDKIT: 1
+
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '.ai/project.json'
+              artifact: 'autosdlc-project-config'
+              publishLocation: 'pipeline'
+            displayName: 'Publish project config'
