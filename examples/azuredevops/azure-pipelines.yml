@@ -1,62 +1,14 @@
-# Example Azure DevOps pipeline for a project using autoSDLC
-# Place this file in azure-pipelines.yml
-
 trigger:
   branches:
     include:
       - '*'
 
-pr:
-  branches:
-    include:
-      - main
-      - develop
-
-# Reference the autoSDLC templates repository
 resources:
   repositories:
-    - repository: templates
+    - repository: pipelines
       type: git
-      name: autosdlc/templates
+      name: autosdlc/pipelines
       ref: main
 
 stages:
-  # Initialize on main/master branch
-  - ${{ if or(eq(variables['Build.SourceBranchName'], 'main'), eq(variables['Build.SourceBranchName'], 'master')) }}:
-    - template: .azuredevops/pipelines/autosdlc-init.yml@templates
-
-  # Analyze on plan/spec/task/develop branches
-  - ${{ if or(eq(variables['Build.SourceBranchName'], 'plan'), eq(variables['Build.SourceBranchName'], 'spec'), eq(variables['Build.SourceBranchName'], 'task'), eq(variables['Build.SourceBranchName'], 'develop')) }}:
-    - template: .azuredevops/pipelines/autosdlc-analyze.yml@templates
-
-  # Your normal CI/CD stages below
-  - stage: Build
-    displayName: 'Build'
-    condition: |
-      and(
-        succeeded(),
-        not(in(variables['Build.SourceBranchName'], 'plan', 'spec', 'task'))
-      )
-    jobs:
-      - job: Build
-        pool:
-          vmImage: 'ubuntu-latest'
-        steps:
-          - script: echo "Building application..."
-            displayName: 'Build'
-
-  - stage: Test
-    displayName: 'Test'
-    dependsOn: Build
-    condition: |
-      and(
-        succeeded(),
-        not(in(variables['Build.SourceBranchName'], 'plan', 'spec', 'task'))
-      )
-    jobs:
-      - job: Test
-        pool:
-          vmImage: 'ubuntu-latest'
-        steps:
-          - script: echo "Running tests..."
-            displayName: 'Test'
+  - template: .azuredevops/pipelines/trigger.yml@pipelines

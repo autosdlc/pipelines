@@ -1,49 +1,9 @@
-# Example GitHub workflow for a project using autoSDLC
-# Place this file in .github/workflows/autosdlc.yml
-
-name: autoSDLC Pipeline
+name: autoSDLC
 
 on:
   push:
     branches: ['**']
-  pull_request:
-    branches: [main, develop]
 
 jobs:
-  # Initialize on main/master branch
-  init:
-    if: github.ref_name == 'main' || github.ref_name == 'master'
-    uses: autosdlc/templates/.github/workflows/autosdlc-init.yml@main
-
-  # Analyze on plan/spec/task/develop branches
-  analyze:
-    if: |
-      github.ref_name == 'plan' || 
-      github.ref_name == 'spec' || 
-      github.ref_name == 'task' || 
-      github.ref_name == 'develop'
-    uses: autosdlc/templates/.github/workflows/autosdlc-analyze.yml@main
-
-  # Your normal CI/CD jobs below
-  build:
-    runs-on: ubuntu-latest
-    if: |
-      github.ref_name != 'plan' && 
-      github.ref_name != 'spec' && 
-      github.ref_name != 'task'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build
-        run: echo "Building application..."
-
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-    if: |
-      github.ref_name != 'plan' && 
-      github.ref_name != 'spec' && 
-      github.ref_name != 'task'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Test
-        run: echo "Running tests..."
+  manage:
+    uses: autosdlc/pipelines/.github/workflows/trigger.yml@main

@@ -1,16 +1,6 @@
-# Azure DevOps reusable template for autoSDLC initialization
-# Usage: reference this template in your pipeline:
-#   resources:
-#     repositories:
-#       - repository: templates
-#         type: git
-#         name: autosdlc/templates
-#   stages:
-#     - template: .azuredevops/pipelines/autosdlc-init.yml@templates
-
 stages:
-  - stage: Initialize
-    displayName: 'autoSDLC Initialize'
+  - stage: autoSDLC
+    displayName: 'autoSDLC'
     condition: |
       or(
         eq(variables['Build.SourceBranchName'], 'main'),
@@ -18,8 +8,8 @@ stages:
       )
     
     jobs:
-      - job: AutoSDLC_Init
-        displayName: 'Run autoSDLC Initialization'
+      - job: trigger
+        displayName: 'autoSDLC Trigger'
         pool:
           vmImage: 'ubuntu-latest'
         
@@ -36,16 +26,9 @@ stages:
               docker run --rm \
                 -v $(Build.SourcesDirectory):/workspace \
                 -w /workspace \
-                ghcr.io/autosdlc/cli:latest init \
+                autosdlc/cli:latest trigger \
                 --token "$(OIDC_TOKEN)" \
                 --pipeline-id "$(Build.BuildId)"
-            displayName: 'Run autoSDLC Initialization'
+            displayName: 'Trigger autoSDLC Pipeline'
             env:
               DOCKER_BUILDKIT: 1
-
-          - task: PublishPipelineArtifact@1
-            inputs:
-              targetPath: '.ai/project.json'
-              artifact: 'autosdlc-project-config'
-              publishLocation: 'pipeline'
-            displayName: 'Publish project config'

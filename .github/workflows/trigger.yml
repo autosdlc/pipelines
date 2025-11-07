@@ -1,10 +1,4 @@
-# GitHub reusable workflow for autoSDLC analysis stage
-# Usage: reference this in your workflow:
-#   jobs:
-#     analyze:
-#       uses: autosdlc/templates/.github/workflows/autosdlc-analyze.yml@main
-
-name: autoSDLC Analyze
+name: autoSDLC
 
 on:
   workflow_call:
@@ -16,11 +10,6 @@ permissions:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    if: |
-      github.ref_name == 'plan' || 
-      github.ref_name == 'spec' || 
-      github.ref_name == 'task' || 
-      github.ref_name == 'develop'
     
     steps:
       - name: Get GitHub OIDC Token
@@ -34,6 +23,6 @@ jobs:
       - name: Run autoSDLC Analysis
         run: |
           docker run --rm \
-            ghcr.io/autosdlc/cli:latest analyze \
+            autosdlc/cli:latest trigger \
             --token "${{ steps.oidc.outputs.token }}" \
             --pipeline-id "${{ github.run_id }}"
