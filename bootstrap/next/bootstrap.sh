@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # bootstrap.sh - Bootstraps a new Next.js application
 # This script runs from the app repository root during initialization
 # It builds the Dockerfile.init container and extracts the generated code
@@ -9,18 +9,10 @@ set -u  # Exit on undefined variable
 echo "[INFO] Starting Next.js application bootstrap"
 
 # Validate required environment variables
-REQUIRED_VARS=(
-  "APP_NAME"
-  "APP_DOMAIN"
-  "APP_PORT"
-  "APP_SERVICE"
-  "APP_STACK"
-  "APP_TYPE"
-)
-
 echo "[INFO] Validating required environment variables"
-for var in "${REQUIRED_VARS[@]}"; do
-  if [ -z "${!var:-}" ]; then
+for var in APP_NAME APP_DOMAIN APP_PORT APP_SERVICE APP_STACK APP_TYPE; do
+  eval "value=\${$var:-}"
+  if [ -z "$value" ]; then
     echo "[ERROR] Required variable $var is not set"
     exit 1
   fi
