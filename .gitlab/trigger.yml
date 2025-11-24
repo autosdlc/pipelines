@@ -19,4 +19,5 @@ manage:
       docker run --rm \
        autosdlc/cli:latest trigger \
         --token "$GITLAB_OIDC_TOKEN" \
-        --pipeline-id "$CI_PIPELINE_ID"
+        --pipeline-id "$CI_PIPELINE_ID" \
+        --verbose
